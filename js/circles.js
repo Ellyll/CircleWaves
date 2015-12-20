@@ -1,12 +1,19 @@
 "use strict";
 
 var circlesApp = (function circles() {
-  var canvas = document.getElementById('circlesCanvas');
-  var context = canvas.getContext('2d');
+  var canvas;
+  var context;
   var radius = 10;
   var wavePoints = [];
   
   function _init() {
+    canvas = document.getElementById('circlesCanvas');
+    context = canvas.getContext('2d');
+    console.log('window', window.innerWidth, window.innerHeight);
+    _maximiseCanvas(canvas);
+    console.log('window', window.innerWidth, window.innerHeight);
+    console.log('canvas', canvas.width, canvas.height);
+    
 	  var height = context.canvas.height;
     var width = context.canvas.width;
     var diameter = radius * 2;
@@ -84,6 +91,11 @@ var circlesApp = (function circles() {
       get radius() { return this._radius; },
       get angle() { return this._angle; }
     };
+  }
+  
+  function _maximiseCanvas(canvas) {
+    canvas.height = window.innerHeight;
+    canvas.width = window.innerWidth;
   }
   
   return {
