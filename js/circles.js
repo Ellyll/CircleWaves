@@ -7,8 +7,8 @@ var circlesApp = (function circles() {
     var context = canvas.getContext('2d');
     _maximiseCanvas(canvas);
 
-    var radius = 10;
-    var spacing = 5;
+    var radius = 15;
+    var spacing = 10;
     var angleStep = Math.PI / 4;
     var wavePoints = _generateWavePoints(radius, canvas.width, canvas.height, spacing, angleStep);
         
