@@ -1,48 +1,38 @@
 "use strict";
 
 var circlesApp = (function circles() {
-  var canvas;
-  var context;
-  var radius = 10;
-  var wavePoints = [];
   
   function _init() {
-    canvas = document.getElementById('circlesCanvas');
-    context = canvas.getContext('2d');
-    console.log('window', window.innerWidth, window.innerHeight);
+    var canvas = document.getElementById('circlesCanvas');
+    var context = canvas.getContext('2d');
     _maximiseCanvas(canvas);
-    console.log('window', window.innerWidth, window.innerHeight);
-    console.log('canvas', canvas.width, canvas.height);
-    
-	  var height = context.canvas.height;
-    var width = context.canvas.width;
-    var diameter = radius * 2;
-    
-    if ( height < diameter || width < diameter) {
+
+    var radius = 10;
+    var spacing = 5;
+    var angleStep = Math.PI / 4;
+    var wavePoints = _generateWavePoints(radius, canvas.width, canvas.height, spacing, angleStep);
+        
+    if (!(wavePoints && wavePoints.length > 0) ) {
       throw "Canvas too small";
     }
     
-    var spacing = 5;
-    var y = diameter;
-    var angle = 0;
-    while (y+diameter+spacing < height) {
-      var x = diameter;
-      while(x+diameter+spacing < width) {
-        wavePoints.push(_makeWavePoint(x, y, radius, angle));
-        x += diameter+spacing;
-        angle += Math.PI / 4;
-      }
-      y += diameter+spacing;
-    }
+    var radiansPerMillisecond = (2*Math.PI/1000)/5;
+    
+    requestAnimationFrame(function(currentTime) { _draw( currentTime, currentTime, radiansPerMillisecond, wavePoints, context); });
+  }
+  
+  function _draw(currentTime, lastTime, rotationSpeed, wavePoints, context) {
+    var newWavePoints = _updateWavePoints(currentTime, lastTime, rotationSpeed, wavePoints);
+    _drawWavePoints(newWavePoints, context);
+    var newLastTime = currentTime;
 
-    var radiansPerMillisecond = (2*Math.PI/500)/10;
-    var lastTime = null;
-
-    function _draw(currentTime) {
-      if (!lastTime) lastTime = currentTime;
+    requestAnimationFrame(function (newCurrentTime) { _draw(newCurrentTime, newLastTime, rotationSpeed, newWavePoints, context); });
+  }
+  
+  function _updateWavePoints(currentTime, lastTime, rotationSpeed, wavePoints) {
       var deltaTime = currentTime - lastTime;
-      var deltaAngle = deltaTime * radiansPerMillisecond;
-      wavePoints = wavePoints.map(function (wp) {
+      var deltaAngle = deltaTime * rotationSpeed;
+      var newWavePoints = wavePoints.map(function (wp) {
         var newAngle = wp.angle+deltaAngle;
         if (newAngle > Math.PI*2) {
           newAngle -= Math.PI*2;
@@ -52,22 +42,17 @@ var circlesApp = (function circles() {
         }
         return _makeWavePoint(wp.x, wp.y, wp.radius, newAngle);
       });
-      _drawWavePoints(wavePoints, context);
-      lastTime = currentTime;
-      requestAnimationFrame(_draw);
-    }
-    
-    requestAnimationFrame(_draw);
+      return newWavePoints;
   }
     
   function _drawWavePoint(wavePoint, context) {
     var x = wavePoint.x + Math.cos(wavePoint.angle)*wavePoint.radius;
     var y = wavePoint.y + Math.sin(wavePoint.angle)*wavePoint.radius;
 
-    var radius = 2;
+    var radiusOfDot = 2;
     
     context.beginPath();
-    context.arc(x, y, radius, 0, 2 * Math.PI, false);
+    context.arc(x, y, radiusOfDot, 0, 2 * Math.PI, false);
     context.fillStyle = 'white';
     context.fill();
   }
@@ -78,6 +63,23 @@ var circlesApp = (function circles() {
     for (var i=0; i < wavePoints.length; i++) {
       _drawWavePoint(wavePoints[i], context);
     }
+  }
+  
+  function _generateWavePoints(radius, canvasWidth, canvasHeight, spacing, angleStep) {
+    var diameter = radius * 2;
+    var y = diameter;
+    var angle = 0;
+    var wavePoints = [];
+    while ((y + diameter + spacing) < canvasHeight) {
+      var x = diameter;
+      while ((x + diameter + spacing) < canvasWidth) {
+        wavePoints.push(_makeWavePoint(x, y, radius, angle));
+        x += diameter + spacing;
+        angle += angleStep;
+      }
+      y += diameter + spacing;
+    }
+    return wavePoints;
   }
   
   function _makeWavePoint(x, y, radius, angle) {
